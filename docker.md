@@ -127,6 +127,13 @@ export LC_ALL=zh_CN.utf8
 export LANG=zh_CN.utf8
 export LANGUAGE=zh_CN.utf8
 
+docker mongo
+docker pull mongo
+docker run --name mongo -p 27017:27017 -d mongo:latest
+
+docker kafka
+docker pull spotify/kafka
+docker run -p 2181:2181 -p 9092:9092  --env ADVERTISED_HOST=localhost --env ADVERVTISED_PORT=9092 --name kafka -d spotify/kafka
 
 docker nacos
 docker pull nacos/nacos-server
