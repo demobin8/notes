@@ -72,6 +72,12 @@ CTRL + SHIFT + J
 ### 快速跳转错误行
 SHIFT + F2
 
+### 跳转定义
+CTRL + B
+
+### 跳转项目
+CTRL + ALT + ]
+
 ### 最近编辑的代码
 CTRL + E
 
