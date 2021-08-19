@@ -66,6 +66,9 @@ ALT + <- 或者 ->
 ### 美化代码
 CTRL + ALT + L
 
+### 合并多行
+CTRL + SHIFT + J
+
 ### 快速跳转错误行
 SHIFT + F2
 
