@@ -75,8 +75,14 @@ SHIFT + F2
 ### 跳转定义
 CTRL + B
 
+### 跳转实现
+CTRL + ALT + B
+
 ### 跳转项目
 CTRL + ALT + ]
+
+### 跳转下一个错误
+F2
 
 ### 最近编辑的代码
 CTRL + E
