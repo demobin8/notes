@@ -65,6 +65,24 @@ GROUP BY
 	c.id
 ```
 
+### TIMESTAMPDIFF
+```
+差30分钟
+SELECT * FROM interviews WHERE TIMESTAMPDIFF(MINUTE, NOW() ,interview_time) = 30
+```
+
+### BETWEEN
+```
+在某日期范围内
+select * from users where DATE_FORMAT(birthday, '%m-%d') BETWEEN '08-01' AND '08-30'
+```
+
+### DATEDIFF
+```
+差5天
+select * from user where DATEDIFF(NOW(), DATE_ADD(arrival_date,INTERVAL 1 YEAR)) = 5
+```
+
 ### sort table with data size
 ```
 select TABLE_NAME, concat(truncate(data_length/1024/1024,2),'MB') as data_size, concat(truncate(index_length/1024/1024,2),'MB') as index_size from information_schema.tables where TABLE_SCHEMA = 'dtp' group by TABLE_NAME order by data_length desc;
