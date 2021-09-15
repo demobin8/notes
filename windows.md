@@ -1,3 +1,6 @@
+### 删除Invoke-WebRequest curl alias
+`remove-item alias:curl`
+
 ### 端口占用
 ```
 netstat -aon|findstr "9999"
