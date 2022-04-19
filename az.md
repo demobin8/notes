@@ -122,6 +122,14 @@ az account list-locations -o table
 az vm list-usage --location eastus2 -o table
 ```
 ![image](https://user-images.githubusercontent.com/16394555/161241824-ae76e727-4810-4937-abc5-6177e81e8685.png)
+### list vm sizes
+```
+az vm list-sizes --location eastus2 -o table
+```
+### list vm skus
+```
+az vm list-skus -o table
+```
 ### list subscriptions
 ```
 az account list -o table
