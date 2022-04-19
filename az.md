@@ -122,6 +122,13 @@ az account list-locations -o table
 az vm list-usage --location eastus2 -o table
 ```
 ![image](https://user-images.githubusercontent.com/16394555/161241824-ae76e727-4810-4937-abc5-6177e81e8685.png)
+### list vm images
+```
+az vm image list -o table
+```
+![image](https://user-images.githubusercontent.com/16394555/163961494-54e4c449-e50c-4582-82ec-67254cc62e0f.png)
+ubuntu 20.04
+> https://github.com/Azure/azure-cli/issues/13320
 ### list vm sizes
 ```
 az vm list-sizes --location eastus2 -o table
