@@ -1,0 +1,154 @@
+version: "3.8"
+networks:
+    project_network:
+services:
+    kafka-streaming-zookeeper:
+        image: confluentinc/cp-zookeeper:6.0.0
+        hostname: kafka-streaming-zookeeper
+        container_name: kafka-streaming-zookeeper
+        ports:
+          - "2181:2181"
+        environment:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+        networks:
+          - project_network
+
+    kafka-streaming-kafka:
+        image: confluentinc/cp-enterprise-kafka:6.0.0
+        hostname: kafka-streaming-kafka
+        container_name: kafka-streaming-kafka
+        depends_on:
+          - kafka-streaming-zookeeper
+        ports:
+          - "29092:29092"
+          - "9012:9012"
+        environment:
+          KAFKA_BROKER_ID: 1
+          KAFKA_JMX_HOSTNAME: kafka-streaming-kafka
+          KAFKA_JMX_PORT: 9012
+          KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-streaming-kafka -Dcom.sun.management.jmxremote.rmi.port=9012
+          KAFKA_ZOOKEEPER_CONNECT: "kafka-streaming-zookeeper:2181"
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-streaming-kafka:9092,PLAINTEXT_HOST://localhost:29092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        networks:
+          - project_network
+
+    kafka-streaming-schema-registry:
+        image: confluentinc/cp-schema-registry:6.0.0
+        hostname: kafka-streaming-schema-registry
+        container_name: kafka-streaming-schema-registry
+        depends_on:
+          - kafka-streaming-zookeeper
+          - kafka-streaming-kafka
+        ports:
+          - "8081:8081"
+        environment:
+          SCHEMA_REGISTRY_HOST_NAME: kafka-streaming-schema-registry
+          SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "kafka-streaming-zookeeper:2181"
+          SCHEMA_REGISTRY_COMPATIBILITY_LEVEL: NONE
+        networks:
+          - project_network
+
+    kafka-streaming-source-connect:
+        image: kafka-streaming-test.azurecr.io/kafka-streaming/connect-base:latest
+        hostname: kafka-streaming-source-connect
+        container_name: kafka-streaming-source-connect
+        depends_on:
+          - kafka-streaming-zookeeper
+          - kafka-streaming-kafka
+          - kafka-streaming-schema-registry
+        ports:
+          - "8083:8083"
+          - "5005:5005"  
+          - "9010:9010"
+        environment:
+          KAFKA_HEAP_OPTS: "-Xms256M -Xmx512M"
+          KAFKA_DEBUG: "y"
+          JAVA_DEBUG_PORT: "*:5005"
+          KAFKA_JMX_HOSTNAME: 0.0.0.0
+          KAFKA_JMX_PORT: 9010
+          CONNECT_BOOTSTRAP_SERVERS: "kafka-streaming-kafka:9092"
+          CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+          CONNECT_CONFIG_STORAGE_TOPIC: kafka-streaming-source-connect-configs
+          CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_OFFSET_STORAGE_TOPIC: kafka-streaming-source-connect-offsets
+          CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_STATUS_STORAGE_TOPIC: kafka-streaming-source-connect-status
+          CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_GROUP_ID: "kafka-streaming-source-connect"
+          CONNECT_REST_ADVERTISED_HOST_NAME: kafka-streaming-source-connect
+          CONNECT_REST_PORT: 8083
+          CONNECT_PLUGIN_PATH: "/usr/share/wonder"
+          CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+          CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://kafka-streaming-schema-registry:8081
+          CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+          CONNECT_ZOOKEEPER_CONNECT: "kafka-streaming-zookeeper:2181"
+        networks:
+          - project_network
+
+    kafka-streaming-sink-connect:
+        image: kafka-streaming-test.azurecr.io/app/connector:latest
+        hostname: kafka-streaming-sink-connect
+        container_name: kafka-streaming-sink-connect
+        depends_on:
+          - kafka-streaming-zookeeper
+          - kafka-streaming-kafka
+          - kafka-streaming-schema-registry
+        ports:
+          - "8084:8083"
+          - "5006:5005"
+          - "9011:9010"
+        environment:
+          KAFKA_HEAP_OPTS: "-Xms256M -Xmx512M"
+          KAFKA_DEBUG: "y"
+          JAVA_DEBUG_PORT: "*:5005"
+          KAFKA_JMX_HOSTNAME: 0.0.0.0
+          KAFKA_JMX_PORT: 9010
+          CONNECT_BOOTSTRAP_SERVERS: "kafka-streaming-kafka:9092"
+          CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+          CONNECT_CONFIG_STORAGE_TOPIC: kafka-streaming-sink-connect-configs
+          CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_OFFSET_STORAGE_TOPIC: kafka-streaming-sink-connect-offsets
+          CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_STATUS_STORAGE_TOPIC: kafka-streaming-sink-connect-status
+          CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_GROUP_ID: "kafka-streaming-sink-connect"
+          CONNECT_REST_ADVERTISED_HOST_NAME: kafka-streaming-sink-connect
+          CONNECT_REST_PORT: 8083
+          CONNECT_PLUGIN_PATH: "/usr/share/wonder"
+          CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+          CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://kafka-streaming-schema-registry:8081
+          CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+          CONNECT_ZOOKEEPER_CONNECT: "kafka-streaming-zookeeper:2181"
+        networks:
+          - project_network
+
+    kafka-streaming-kafka-ui:
+        image: provectuslabs/kafka-ui:latest
+        hostname: kafka-streaming-kafka-ui
+        container_name: kafka-streaming-kafka-ui
+        depends_on:
+          - kafka-streaming-zookeeper
+          - kafka-streaming-kafka
+          - kafka-streaming-schema-registry
+          - kafka-streaming-source-connect
+          - kafka-streaming-sink-connect
+        ports:
+          - "8090:8080"
+        environment:
+          KAFKA_CLUSTERS_0_NAME: local
+          KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-streaming-kafka:9092"
+          KAFKA_CLUSTERS_0_ZOOKEEPER: "kafka-streaming-zookeeper:2181"
+          KAFKA_CLUSTERS_0_JMXPORT: 9012
+          KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://kafka-streaming-schema-registry:8081
+          KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: source
+          KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-streaming-source-connect:8083
+          KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: sink
+          KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://kafka-streaming-sink-connect:8083
+        networks:
+          - project_network
