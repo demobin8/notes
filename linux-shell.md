@@ -1,3 +1,20 @@
+### 检测重复行
+
+```
+duplicate(){
+  echo "$1" | awk '!/^null/' | sort | uniq -d | grep . -qc
+}
+```
+
+### yq & jq
+
+```
+    data=$(yq ea '[.connector]' -o json -I 0 "$filename" | awk '!/^null/')
+    # add upstream type and database info to curl POST json payload
+    json=$(echo {} | jq -c ". + {\"database-type\": \"$(echo "$upstream_database_type" | awk '{print toupper($0)}')\", \"domain\": \"$domain\", \"database\": \"$database\", \"sink-type\": \"$2\"}" | jq -c --argjson v "$data" '. + {"table-groups": $v}')
+
+```
+
 ### 统计响应超过1秒的接口
 
 `grep -E '([1-9]{4} ms)' *.log | awk '{print $3}' | sort | uniq -c |sort -nr`
